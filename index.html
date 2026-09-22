@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>途能 T87D · 小程序页面展示</title>
+<link rel="icon" type="image/jpeg" href="static/logo.jpg" />
+<style>
+  :root {
+    --green: #2aad6a; --deep: #1a7a4a; --mint: #4ae3a0; --gold: #e8c15a;
+    --bg: #080d0a; --ink: #eaf3ec; --muted: #8fa89a; --line: rgba(255,255,255,.08);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================= background layers ================= */
+  .bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
+  .bg::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, #0b1410 0%, #07100b 45%, #0a1410 100%);
+  }
+  .bg .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+  .o1 { width: 620px; height: 620px; top: -160px; left: -140px; background: radial-gradient(circle, rgba(42,173,106,.55), transparent 70%); animation: float 16s ease-in-out infinite; }
+  .o2 { width: 540px; height: 540px; top: 12%; right: -180px; background: radial-gradient(circle, rgba(25,195,125,.45), transparent 70%); animation: float 20s ease-in-out infinite reverse; }
+  .o3 { width: 640px; height: 640px; top: 48%; left: 30%; background: radial-gradient(circle, rgba(232,193,90,.16), transparent 70%); animation: float 24s ease-in-out infinite; }
+  .o4 { width: 500px; height: 500px; bottom: -120px; right: 10%; background: radial-gradient(circle, rgba(42,173,106,.4), transparent 70%); animation: float 18s ease-in-out infinite reverse; }
+  @keyframes float { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(30px,-26px) scale(1.06); } }
+  .bg .grid { position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size: 52px 52px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  /* ================= nav ================= */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 32px;
+    background: rgba(8,13,10,.55); backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--line);
+  }
+  nav .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: .5px; }
+  nav .logo img { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 14px rgba(42,173,106,.35); }
+  nav .links { display: flex; gap: 4px; }
+  nav .links a { color: var(--muted); text-decoration: none; font-size: 13px; padding: 7px 12px; border-radius: 9px; transition: .2s; }
+  nav .links a:hover { color: #fff; background: rgba(255,255,255,.06); }
+
+  /* ================= hero ================= */
+  .hero { position: relative; max-width: 1000px; margin: 0 auto; padding: 96px 24px 40px; text-align: center; }
+  .hero .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 18px; border-radius: 999px; border: 1px solid rgba(74,227,160,.3); background: rgba(42,173,106,.1); color: var(--mint); font-size: 12px; letter-spacing: 2px; font-weight: 600; }
+  .hero h1 { margin: 26px 0 16px; font-size: 56px; line-height: 1.12; font-weight: 800; letter-spacing: 1px;
+    background: linear-gradient(120deg, #ffffff 0%, #b9f0d3 45%, #4ae3a0 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .sub { color: var(--muted); font-size: 16px; line-height: 2; max-width: 620px; margin: 0 auto; }
+  .hero .sub b { color: var(--mint); font-weight: 600; }
+  .hero .meta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+  .hero .meta span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 13px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: #c4d6cb; font-size: 13px; }
+  .hero .meta i { font-style: normal; font-size: 15px; }
+
+  /* ================= page rows ================= */
+  .rows { max-width: 1120px; margin: 0 auto; padding: 30px 24px 40px; display: flex; flex-direction: column; gap: 110px; }
+  .page-row { display: flex; align-items: center; gap: 84px; opacity: 0; transform: translateY(42px); transition: opacity .8s ease, transform .8s ease; }
+  .page-row.visible { opacity: 1; transform: translateY(0); }
+  .page-row.reverse { flex-direction: row-reverse; }
+  .page-phone { flex: 0 0 auto; }
+  .page-info { flex: 1; min-width: 0; }
+  .page-index { font-size: 12px; letter-spacing: 5px; color: var(--green); font-weight: 700; }
+  .page-info h2 { margin: 12px 0 4px; font-size: 34px; font-weight: 800; letter-spacing: 1px; }
+  .page-info .en { color: #5d7266; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; }
+  .page-desc { color: var(--muted); font-size: 15px; line-height: 1.9; margin: 0 0 26px; max-width: 460px; }
+  .features { list-style: none; margin: 0; padding: 20px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; max-width: 520px;
+    border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.03); backdrop-filter: blur(8px); }
+  .features li { display: flex; align-items: flex-start; gap: 10px; color: #c4d6cb; font-size: 14px; line-height: 1.5; }
+  .features .fi { flex: 0 0 auto; width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px rgba(42,173,106,.7); }
+
+  /* ================= phone mockup ================= */
+  .phone {
+    position: relative; width: 412px; height: 834px; border-radius: 54px; padding: 11px;
+    background: linear-gradient(145deg, #3a3f45, #101215);
+    box-shadow:
+      inset 0 0 0 2px #565d64, inset 0 0 0 3px #0b0d0f,
+      0 0 60px rgba(42,173,106,.28), 0 46px 90px rgba(0,0,0,.55);
+  }
+  .phone .screen { position: relative; width: 100%; height: 100%; border-radius: 44px; overflow: hidden; background: #000; }
+  .phone iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .notch { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 128px; height: 30px; border-radius: 18px; background: #0b0d0f; z-index: 20; box-shadow: inset 0 2px 5px rgba(0,0,0,.7); }
+  .notch::after { content: ''; position: absolute; top: 50%; right: 12px; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 50%; background: #1a2530; }
+  .pbtn { position: absolute; width: 3px; background: #565d64; border-radius: 2px; z-index: 5; }
+  .pbtn.mute { left: -3px; top: 126px; height: 26px; }
+  .pbtn.volup { left: -3px; top: 170px; height: 48px; }
+  .pbtn.voldown { left: -3px; top: 228px; height: 48px; }
+  .pbtn.power { right: -3px; top: 250px; height: 70px; }
+
+  footer { text-align: center; padding: 30px 24px 80px; color: #55685c; font-size: 13px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 900px) {
+    .page-row, .page-row.reverse { flex-direction: column; gap: 30px; }
+    .phone { width: 330px; height: 668px; border-radius: 44px; }
+    .phone .screen { border-radius: 36px; }
+    .hero h1 { font-size: 36px; }
+    .features { grid-template-columns: 1fr; }
+    nav .links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="orb o4"></span>
+  <span class="grid"></span>
+</div>
+
+<nav>
+  <div class="logo"><img src="static/logo.jpg" alt="途能"> 途能 T87D · 绿色出行</div>
+  <div class="links">
+    <a href="#page-home">首页</a><a href="#page-rental">租车</a><a href="#page-carbon">碳积分</a><a href="#page-shop">商城</a><a href="#page-community">社区</a><a href="#page-profile">我的</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">☀ SOLAR-POWERED MOBILITY</div>
+  <h1>途能 T87D · 小程序展示</h1>
+  <p class="sub">太阳能助力车 · 整车选购 / 共享租车 / 碳积分 / 商城 / 社区 / 我的。<br>以下每个手机屏均为 <b>真 app 打包页面</b>，像素级一致、可独立交互。</p>
+  <div class="meta">
+    <span><i>📱</i> 6 个核心页面</span>
+    <span><i>⚡</i> 真 app 渲染 · 零偏差</span>
+    <span><i>👆</i> 每个屏内可点击操作</span>
+  </div>
+</header>
+
+<main class="rows">
+
+  <section class="page-row" id="page-home">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=home" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">01 · HOME</div>
+      <h2>首页</h2>
+      <div class="en">Tuneng Home</div>
+      <p class="page-desc">打开即用的出行入口，聚合定位、活动、车辆与碳减排概览，一眼掌握出行全局。</p>
+      <ul class="features">
+        <li><span class="fi"></span>定位 · 搜索 · 通知中心</li>
+        <li><span class="fi"></span>Banner 活动轮播</li>
+        <li><span class="fi"></span>快捷服务一键直达</li>
+        <li><span class="fi"></span>附近车辆 / 碳减排概览</li>
+        <li><span class="fi"></span>热门整车浏览</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-row reverse" id="page-rental">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=rental" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">02 · RENTAL</div>
+      <h2>共享租车</h2>
+      <div class="en">Shared Rental</div>
+      <p class="page-desc">地图找车、扫码开锁、骑行中实时计费，支持次卡 / 日卡 / 月卡灵活套餐。</p>
+      <ul class="features">
+        <li><span class="fi"></span>附近车辆地图与点位</li>
+        <li><span class="fi"></span>进行中的骑行订单</li>
+        <li><span class="fi"></span>次卡 / 日卡 / 月卡套餐</li>
+        <li><span class="fi"></span>一键扫码开锁</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-row" id="page-carbon">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=carbon" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">03 · CARBON</div>
+      <h2>碳积分</h2>
+      <div class="en">Carbon Assets</div>
+      <p class="page-desc">把绿色里程变成碳积分，记录每一次减排，兑换骑行好礼。</p>
+      <ul class="features">
+        <li><span class="fi"></span>碳资产总览（积分 / 里程 / 植树）</li>
+        <li><span class="fi"></span>积分钱包与明细</li>
+        <li><span class="fi"></span>骑行记录</li>
+        <li><span class="fi"></span>成就徽章墙</li>
+        <li><span class="fi"></span>碳积分兑换入口</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-row reverse" id="page-shop">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=shop" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">04 · SHOP</div>
+      <h2>商城</h2>
+      <div class="en">Tuneng Store</div>
+      <p class="page-desc">T87D 整车选购与配色切换，还有骑行装备与积分好礼，一站式购齐。</p>
+      <ul class="features">
+        <li><span class="fi"></span>T87D 整车选购 · 配色切换</li>
+        <li><span class="fi"></span>性能参数一览</li>
+        <li><span class="fi"></span>骑行装备配件商城</li>
+        <li><span class="fi"></span>积分好礼兑换</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-row" id="page-community">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=community" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">05 · COMMUNITY</div>
+      <h2>社区</h2>
+      <div class="en">Green Community</div>
+      <p class="page-desc">和骑友分享绿色出行瞬间，点赞、评论、收藏、关注，还有话题挑战与科普视频。</p>
+      <ul class="features">
+        <li><span class="fi"></span>骑友帖子动态</li>
+        <li><span class="fi"></span>点赞 · 评论 · 收藏 · 关注</li>
+        <li><span class="fi"></span>话题挑战</li>
+        <li><span class="fi"></span>科普视频</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="page-row reverse" id="page-profile">
+    <div class="page-phone"><div class="phone"><span class="pbtn mute"></span><span class="pbtn volup"></span><span class="pbtn voldown"></span><span class="pbtn power"></span><span class="notch"></span><div class="screen"><iframe src="app/index.html?tab=profile" loading="lazy"></iframe></div></div></div>
+    <div class="page-info">
+      <div class="page-index">06 · PROFILE</div>
+      <h2>我的</h2>
+      <div class="en">Personal Center</div>
+      <p class="page-desc">个人资料、订单、车辆、收藏、报修与客服，都在这里集中管理。</p>
+      <ul class="features">
+        <li><span class="fi"></span>个人资料与会员等级</li>
+        <li><span class="fi"></span>订单 / 钱包 / 车辆 / 收藏</li>
+        <li><span class="fi"></span>在线报修 · 智能客服</li>
+        <li><span class="fi"></span>骑行记录 · 地址 / 隐私设置</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<footer>途能 T87D · 绿色出行小程序页面展示 · 通过 iframe 内嵌真 app 构建产物</footer>
+
+<script>
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.page-row').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
